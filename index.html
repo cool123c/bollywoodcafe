@@ -635,8 +635,8 @@
             </div>
 
             <nav class="lang-switch" aria-label="Language switcher">
-                <button id="lang-en" aria-pressed="true" data-lang="en">EN</button>
-                <button id="lang-fr" aria-pressed="false" data-lang="fr">FR</button>
+                <button id="lang-en" aria-pressed="false" data-lang="en">EN</button>
+                <button id="lang-fr" aria-pressed="true" data-lang="fr">FR</button>
             </nav>
         </header>
 
@@ -924,7 +924,7 @@
                 }
             };
 
-            const defaultLang = localStorage.getItem('site_lang') || (navigator.language?.startsWith('fr') ? 'fr' : 'en');
+            const defaultLang = localStorage.getItem('site_lang') || 'fr'; // Default to French
             let current = defaultLang;
 
             function applyTranslations(lang) {
