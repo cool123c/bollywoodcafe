@@ -726,6 +726,7 @@
                             <div class="form-group">
                                 <label for="email" data-i18n="formEmail">Email</label>
                                 <input type="email" id="email" name="email" required placeholder="">
+                                <input type="hidden" name="_replyto" id="replyto">
                             </div>
                             
                             <div class="form-group">
@@ -963,6 +964,18 @@
             if (dateInput) {
                 const today = new Date().toISOString().split('T')[0];
                 dateInput.setAttribute('min', today);
+            }
+
+            // Copy email to _replyto field for autoresponse
+            const reservationForm = document.getElementById('reservationForm');
+            if (reservationForm) {
+                reservationForm.addEventListener('submit', function() {
+                    const emailField = document.getElementById('email');
+                    const replytoField = document.getElementById('replyto');
+                    if (emailField && replytoField) {
+                        replytoField.value = emailField.value;
+                    }
+                });
             }
 
             // Update placeholders based on language
