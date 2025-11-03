@@ -7,6 +7,7 @@
     <meta name="description" content="Bollywood Cafe — authentic Indian flavours, great ambience.">
     <link rel="stylesheet" href="styles/global.css">
     <link rel="icon" href="favicon.ico">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <style>
         /* Modern responsive design */
         *, *::before, *::after { box-sizing: border-box; }
@@ -709,14 +710,8 @@
                     <!-- Online booking form -->
                     <div class="reservation-form-container">
                         <h3 data-i18n="bookOnline">Book Online</h3>
-                        <form class="reservation-form" id="reservationForm" action="https://formsubmit.co/bollywoodcafepau@gmail.com" method="POST">
-                            <!-- FormSubmit Configuration -->
-                            <input type="hidden" name="_subject" value="Nouvelle Réservation - Bollywood Cafe" id="formSubject">
-                            <input type="hidden" name="_captcha" value="false">
-                            <input type="hidden" name="_template" value="table">
-                            <input type="hidden" name="_autoresponse" value="Merci pour votre réservation ! Nous confirmerons sous peu. Tel: +33 5 59 84 68 56" id="formAutoresponse">
-                            <input type="hidden" name="_next" value="https://cool123c.github.io/bollywoodcafe/?success=true">
-                            <input type="text" name="_honey" style="display:none">
+                        <form class="reservation-form" id="reservationForm">
+                            <!-- Form will be submitted via JavaScript -->
                             
                             <div class="form-group">
                                 <label for="name" data-i18n="formName">Name</label>
@@ -726,7 +721,6 @@
                             <div class="form-group">
                                 <label for="email" data-i18n="formEmail">Email</label>
                                 <input type="email" id="email" name="email" required placeholder="">
-                                <input type="hidden" name="_replyto" id="replyto">
                             </div>
                             
                             <div class="form-group">
@@ -966,14 +960,71 @@
                 dateInput.setAttribute('min', today);
             }
 
-            // Copy email to _replyto field for autoresponse
+            // Initialize EmailJS
+            emailjs.init('3hQ9GWqe0pJ3_k2JH'); // Public Key
+
+            // Handle form submission
             const reservationForm = document.getElementById('reservationForm');
+            const formStatus = document.getElementById('formStatus');
+            
             if (reservationForm) {
-                reservationForm.addEventListener('submit', function() {
-                    const emailField = document.getElementById('email');
-                    const replytoField = document.getElementById('replyto');
-                    if (emailField && replytoField) {
-                        replytoField.value = emailField.value;
+                reservationForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    // Disable submit button
+                    const submitBtn = reservationForm.querySelector('.btn-submit');
+                    const originalText = submitBtn.textContent;
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = current === 'fr' ? 'Envoi en cours...' : 'Sending...';
+                    
+                    // Get form data
+                    const formData = {
+                        name: document.getElementById('name').value,
+                        email: document.getElementById('email').value,
+                        phone: document.getElementById('phone').value,
+                        date: document.getElementById('date').value,
+                        time: document.getElementById('time').value,
+                        guests: document.getElementById('guests').value,
+                        message: document.getElementById('message').value || 'N/A'
+                    };
+                    
+                    try {
+                        // Send to restaurant (Service ID: service_v1f3cza, Template ID: template_jmhahja)
+                        await emailjs.send('service_v1f3cza', 'template_jmhahja', formData);
+                        
+                        // Send confirmation to customer
+                        const confirmationMessage = current === 'fr' 
+                            ? 'Merci pour votre réservation ! Nous confirmerons sous peu. Tel: +33 5 59 84 68 56'
+                            : 'Thank you for your reservation! We will confirm shortly. Tel: +33 5 59 84 68 56';
+                        
+                        await emailjs.send('service_v1f3cza', 'template_confirmation', {
+                            to_email: formData.email,
+                            to_name: formData.name,
+                            message: confirmationMessage,
+                            ...formData
+                        });
+                        
+                        // Show success message
+                        formStatus.textContent = current === 'fr' 
+                            ? '✓ Réservation envoyée ! Nous confirmerons sous peu.'
+                            : '✓ Reservation submitted! We\'ll confirm shortly.';
+                        formStatus.className = 'form-status success';
+                        formStatus.style.display = 'block';
+                        
+                        // Reset form
+                        reservationForm.reset();
+                        
+                    } catch (error) {
+                        console.error('Error:', error);
+                        formStatus.textContent = current === 'fr'
+                            ? '✗ Une erreur s\'est produite. Appelez-nous: +33 5 59 84 68 56'
+                            : '✗ Something went wrong. Please call: +33 5 59 84 68 56';
+                        formStatus.className = 'form-status error';
+                        formStatus.style.display = 'block';
+                    } finally {
+                        // Re-enable submit button
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalText;
                     }
                 });
             }
